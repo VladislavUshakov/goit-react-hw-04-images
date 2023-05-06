@@ -1,51 +1,46 @@
 import { ImageGalleryItem } from 'components/ImageGalleryItem';
 import { List } from './ImageGallery.styles';
-import { Component } from 'react';
+import { useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 
-export class ImageGallery extends Component {
-  static propTypes = {
-    imageCollection: PropTypes.arrayOf(
-      PropTypes.shape({
-        id: PropTypes.number.isRequired,
-      })
-    ).isRequired,
+export const ImageGallery = ({ imageCollection }) => {
+  const cardRef = useRef();
+  const collectionLength = imageCollection.length;
+
+  const autoScroll = () => {
+    const cardHeight = cardRef.current.getBoundingClientRect().height;
+
+    window.scrollBy({
+      top: cardHeight * 3,
+      behavior: 'smooth',
+    });
   };
 
-  componentDidUpdate = prevProps => {
-    if (
-      prevProps.imageCollection !== this.props.imageCollection &&
-      this.props.imageCollection.length > 12
-    ) {
-      this.autoScroll();
+  useEffect(() => {
+    if (collectionLength > 12) {
+      autoScroll();
     }
-  };
+  }, [collectionLength]);
 
-  autoScroll = () => {
-    const cardHeight =
-      document.querySelector('ul').firstElementChild?.scrollHeight;
+  return (
+    <List>
+      {imageCollection.map(({ id, webformatURL, largeImageURL, tags }) => (
+        <ImageGalleryItem
+          key={id}
+          webformatURL={webformatURL}
+          largeImageURL={largeImageURL}
+          tags={tags}
+          ref={cardRef}
+        />
+      ))}
+    </List>
+  );
+};
 
-    if (cardHeight) {
-      window.scrollBy({
-        top: cardHeight * 3,
-        behavior: 'smooth',
-      });
-    }
-  };
-
-  render() {
-    const { imageCollection } = this.props;
-    return (
-      <List>
-        {imageCollection.map(({ id, webformatURL, largeImageURL, tags }) => (
-          <ImageGalleryItem
-            key={id}
-            webformatURL={webformatURL}
-            largeImageURL={largeImageURL}
-            tags={tags}
-          />
-        ))}
-      </List>
-    );
-  }
-}
+ImageGallery.propTypes = {
+  imageCollection: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+    })
+  ).isRequired,
+};

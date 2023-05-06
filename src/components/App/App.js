@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { Container } from './App.styles';
 import { getImageCollection } from 'services/pixabayApi';
 import { Searchbar } from 'components/Searchbar';
@@ -6,54 +6,51 @@ import { Loader } from 'components/Loader';
 import { Button } from 'components/Button';
 import { ImageGallery } from 'components/ImageGallery';
 
-export class App extends Component {
-  state = {
-    imageCollection: [],
-    search: '',
-    isLoading: false,
-    page: 1,
+export const App = () => {
+  const [imageCollection, setImageCollection] = useState([]);
+  const [search, setSearch] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [page, setPage] = useState(1);
+
+  const isRenderButton = imageCollection.length > 0;
+
+  const setSearchValue = newValue => {
+    setSearch(newValue.trim());
+    setImageCollection([]);
+    setPage(1);
   };
 
-  componentDidUpdate = async (_, prevState) => {
-    const { search, page } = this.state;
+  const appendPage = () => {
+    setPage(prevPage => prevPage + 1);
+  };
 
-    if (prevState.search !== search) {
-      this.setState({ page: 1, isLoading: true, imageCollection: [] });
-      const imageCollection = await getImageCollection(search, page);
-      this.setState({ imageCollection, isLoading: false });
-    }
-
-    if (prevState.page !== page) {
-      this.setState({ isLoading: true });
+  useEffect(() => {
+    async function toNewRequest() {
+      setIsLoading(true);
       const newImageCollection = await getImageCollection(search, page);
-      this.setState(
-        ({ imageCollection: currentImageCollection, isLoading }) => ({
-          imageCollection: [...currentImageCollection, ...newImageCollection],
-          isLoading: false,
-        })
-      );
+      if (page === 1) {
+        setImageCollection(newImageCollection);
+      } else {
+        setImageCollection(prevCollection => [
+          ...prevCollection,
+          ...newImageCollection,
+        ]);
+      }
+
+      setIsLoading(false);
     }
-  };
 
-  setSearchValue = newValue => {
-    this.setState({ search: newValue.trim() });
-  };
+    if (search) {
+      toNewRequest();
+    }
+  }, [search, page]);
 
-  appendPage = () => {
-    this.setState(({ page }) => ({ page: page + 1 }));
-  };
-
-  render() {
-    const { imageCollection, isLoading } = this.state;
-    const isRenderButton = imageCollection.length > 0;
-
-    return (
-      <Container>
-        <Searchbar onSubmit={this.setSearchValue} />
-        <ImageGallery imageCollection={imageCollection} />
-        <Loader visible={isLoading} />
-        {isRenderButton && <Button onClick={this.appendPage} />}
-      </Container>
-    );
-  }
-}
+  return (
+    <Container>
+      <Searchbar onSubmit={setSearchValue} />
+      <ImageGallery imageCollection={imageCollection} />
+      <Loader visible={isLoading} />
+      {isRenderButton && <Button onClick={appendPage} />}
+    </Container>
+  );
+};
