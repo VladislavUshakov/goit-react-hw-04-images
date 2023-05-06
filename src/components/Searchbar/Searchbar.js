@@ -14,7 +14,6 @@ export const Searchbar = ({ onSubmit }) => (
         e.preventDefault();
         const input = e.target.elements.search;
         onSubmit(input.value);
-        input.value = '';
       }}
     >
       <SearchButton type="submit">
