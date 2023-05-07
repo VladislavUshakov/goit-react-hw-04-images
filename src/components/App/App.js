@@ -14,10 +14,14 @@ export const App = () => {
 
   const isRenderButton = imageCollection.length > 0;
 
-  const setSearchValue = newValue => {
-    setSearch(newValue.trim());
-    setImageCollection([]);
-    setPage(1);
+  const setSearchValue = value => {
+    const newSearch = value.trim();
+
+    if (search !== newSearch) {
+      setSearch(newSearch);
+      setImageCollection([]);
+      setPage(1);
+    }
   };
 
   const appendPage = () => {
@@ -28,6 +32,7 @@ export const App = () => {
     async function toNewRequest() {
       setIsLoading(true);
       const newImageCollection = await getImageCollection(search, page);
+
       if (page === 1) {
         setImageCollection(newImageCollection);
       } else {
